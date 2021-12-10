@@ -33,6 +33,10 @@
                 padding: 5px 12px;
             }
 
+            .locked {
+                background-color: rgba(255, 0, 0, 0.5) !important;
+            }
+
             /* header */
 
             .header {
@@ -81,10 +85,6 @@
                 padding: 5px 12px;
                 border-radius: 15px;
             }
-
-            .footer.locked {
-                background-color: rgba(255, 0, 0, 0.5) !important;
-            }
         </style>
     </head>
     <body>
@@ -105,7 +105,7 @@
 
             function server_handle_action(action) {
                 // update the server state
-                server.handle_action(action)
+                let success = server.handle_action(action)
 
                 // update the last edited time
                 server.updated()
@@ -114,30 +114,46 @@
                 server.update_view()
             }
 
+            function sync() {
+                // check if theres been any updates since we last looked
+                const needs_to_update = server.last_updated() > client.last_updated()
+
+                if (!needs_to_update) client.updated()
+
+                // sync all the action
+                client_unsynced_actions.forEach(server_handle_action)
+
+                // clean the unsynced action list
+                client_unsynced_actions = []
+
+                if (needs_to_update) client.replace(server.data())
+            }
+
             function client_handle_action(action) {
                 // optomistic update
                 client.handle_action(action)
 
                 // sync action
-                if (client_is_connected) {
-                    server_handle_action(action)
-                }
+                client_unsynced_actions.push(action)
+                if (client_is_connected) sync()
 
                 // update view
                 client.update_view()
             }
 
             function ping() {
-                if (server.last_updated() > client.last_updated()) {
-                    client.replace(server.data())
-                }
+                sync()
 
                 // update view
                 client.update_view()
             }
 
             function toggle_connection() {
-                client_is_connected = !client_is_connected;                
+                client_is_connected = !client_is_connected;
+                
+                // update view
+                document.querySelector("#toggle_connection").innerText = client_is_connected ? "DISCONNECT" : "CONNECT"
+                document.querySelector("#toggle_connection").classList.toggle("locked", !client_is_connected)
             }
 
             function toggle_lock() {

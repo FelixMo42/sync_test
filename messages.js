@@ -11,7 +11,7 @@ export function Messages(element) {
     // data
     let messages = []
     let locked = false
-    let last_updated = get_time()
+    let last_updated = 0
 
     // callbacks
     let default_post_text = null
