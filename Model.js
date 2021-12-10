@@ -7,42 +7,34 @@ export function Message(text) {
     }
 }
 
-export function Messages(element) {
+export function Model(element) {
     // data
     let messages = []
     let locked = false
     let last_updated = 0
 
-    // callbacks
-    let default_post_text = null
-
     return {
-        /* builder */
-
-        with_default_post_text(callback) {
-            default_post_text = callback
-            return this
-        },
-
         /* getters */
-
-        get length() {
-            return messages.length
-        },
 
         get_post_text() {
             return default_post_text(this)
         },
 
+        data() {
+            return JSON.parse(JSON.stringify({
+                messages,
+                locked,
+            }))
+        },
+
+        /* getters */
+
         last_updated() {
             return last_updated
         },
 
-        data() {
-            return JSON.parse(JSON.stringify({
-                messages,
-                locked
-            }))
+        messages() {
+            return messages
         },
 
         is_locked() {
@@ -86,31 +78,5 @@ export function Messages(element) {
         updated() {
             last_updated = get_time()
         },
-
-        /* view */
-
-        update_view() {
-            // update message list
-            element.querySelector(".messages").replaceChildren(...messages.map((message) => {
-                const element = document.createElement("div")
-                element.innerText = message.text
-                return element
-            }))
-            
-            // update post text
-            if (default_post_text) {
-                element.querySelector(".footer p").innerText = default_post_text(this)
-            }
-
-            // update lock view
-            element.querySelector(".footer button").innerText = locked ? "LOCK" : "POST"
-            element.querySelector(".footer").classList.toggle("locked", locked)
-            const toggle_element = element.querySelector("#toggle_lock")
-            if (toggle_element) {
-                toggle_element.innerText = locked ? "UNLOCK" : "LOCK"
-            }
-
-            return this
-        }
     }
 }

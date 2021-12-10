@@ -17,13 +17,15 @@
                     -apple-system, BlinkMacSystemFont, 'Segoe UI',
                     Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
                 background-color: rgb(50, 50, 50);
+                justify-content: center;
             }
 
-            .root {
+            .client {
                 flex: 1;
                 background-color: rgb(0, 255, 255, 0.5);
                 display: flex;
                 flex-direction: column;
+                max-width: 400px;
             }
 
             button {
@@ -61,7 +63,7 @@
                 overflow-y: scroll;
             }
 
-            .messages div {
+            .messages p {
                 background-color: rgb(255, 255, 255, 0.2);
                 margin: 5px;
                 border-radius: 15px;
@@ -89,119 +91,25 @@
     </head>
     <body>
         <script type="module">
-            import { Messages } from "./messages.js"
-            import { SetLock, PostMessage, DeleteMessage } from "./actions.js"
+            import Client from "./client.js"
+            import RealTimeClient from "./RealTimeClient.js"
+            import Server from "./server.js"
+            import { on_update } from "./util.js"
 
-            const server = Messages(document.querySelector("#server"))
-                .with_default_post_text((messages) => `server message #${messages.length + 1}`)
-                .update_view()
-        
-            const client = Messages(document.querySelector("#client"))
-                .with_default_post_text((messages) => `client message #${messages.length + 1}`)
-                .update_view()
+            const server = Server()
 
-            let client_unsynced_actions = []
-            let client_is_connected = true;
+            const clients = [
+                RealTimeClient("SERVER", server),
+                Client("MOBILE", server)
+            ]
 
-            function server_handle_action(action) {
-                // update the server state
-                let success = server.handle_action(action)
-
-                // update the last edited time
-                server.updated()
-
-                // update view
-                server.update_view()
+            function render() {
+                document.body.replaceChildren(...clients.map(client => client()))
             }
 
-            function sync() {
-                // check if theres been any updates since we last looked
-                const needs_to_update = server.last_updated() > client.last_updated()
+            on_update.push(render)
 
-                if (!needs_to_update) client.updated()
-
-                // sync all the action
-                client_unsynced_actions.forEach(server_handle_action)
-
-                // clean the unsynced action list
-                client_unsynced_actions = []
-
-                if (needs_to_update) client.replace(server.data())
-            }
-
-            function client_handle_action(action) {
-                // optomistic update
-                client.handle_action(action)
-
-                // sync action
-                client_unsynced_actions.push(action)
-                if (client_is_connected) sync()
-
-                // update view
-                client.update_view()
-            }
-
-            function ping() {
-                sync()
-
-                // update view
-                client.update_view()
-            }
-
-            function toggle_connection() {
-                client_is_connected = !client_is_connected;
-                
-                // update view
-                document.querySelector("#toggle_connection").innerText = client_is_connected ? "DISCONNECT" : "CONNECT"
-                document.querySelector("#toggle_connection").classList.toggle("locked", !client_is_connected)
-            }
-
-            function toggle_lock() {
-                server_handle_action( SetLock(!server.is_locked()) )
-            }
-
-            function post_server() {
-                server_handle_action( PostMessage(server.get_post_text()) )
-            }
-
-            function post_client() {
-                client_handle_action( PostMessage(client.get_post_text()) )
-            }
-
-            document.querySelector("#post_client").onclick = post_client
-            document.querySelector("#post_server").onclick = post_server
-            document.querySelector("#toggle_lock").onclick = toggle_lock
-            document.querySelector("#toggle_connection").onclick = toggle_connection
-            document.querySelector("#ping").onclick = ping
+            render()
         </script>
-        <div id="server" class="root">
-            <div class="header">
-                <p>SERVER</p>
-
-                <button id="toggle_lock">LOCK</button>
-            </div>
-            <div class="messages">
-            </div>
-            <div class="footer">
-                <p>server message #1</p>
-
-                <button id="post_server">POST</button>
-            </div>
-        </div>
-        <div id="client" class="root">
-            <div class="header">
-                <p>CLIENT</p>
-
-                <button id="ping">PING</button>
-                <button id="toggle_connection">DISCONNECT</button>
-            </div>
-            <div class="messages">
-            </div>
-            <div class="footer">
-                <p>client message #1</p>
-
-                <button id="post_client">POST</button>
-            </div>
-        </div>
     </body>
 </html>
