@@ -81,91 +81,103 @@
                 padding: 5px 12px;
                 border-radius: 15px;
             }
+
+            .footer.locked {
+                background-color: rgba(255, 0, 0, 0.5) !important;
+            }
         </style>
     </head>
     <body>
-        <script>
-            const server_messages = []
-            const client_messages = []
+        <script type="module">
+            import { Messages } from "./messages.js"
+
+            const server_messages = Messages(document.querySelector("#server"))
+                .with_default_post_text((messages) => `server message #${messages.length + 1}`)
+                .update_view()
+        
+            const client_messages = Messages(document.querySelector("#client"))
+                .with_default_post_text((messages) => `client message #${messages.length + 1}`)
+                .update_view()
+
+            let server_is_locked = false;
+
+            let client_is_connected = true;
+            let client_is_locked = false;
 
             function ping() {
+
             }
 
             function toggle_connection() {
+                client_is_connected = !client_is_connected;
+
                 
             }
 
             function toggle_lock() {
-                
+                // update lock on server
+                server_is_locked = !server_is_locked
+                server_messages.set_lock(server_is_locked)
+
+                // update view
+                server_messages.update_view()
+                document.querySelector("#toggle_lock").innerText = server_is_locked ? "UNLOCK" : "LOCK"
             }
 
             function post_server() {
-                server_messages.push(Message(_get_server_text()))
-                _update_server_messages()
+                if (server_is_locked) return
+
+                server_messages.post()
+                server_messages.update_view()
             }
 
             function post_client() {
-                client_messages.push(Message(_get_client_text()))
-                _update_client_messages()
-            }
+                if (client_is_locked) return
 
-            function Message(text) {
-                return {
-                    text,
+                // optomistic update
+                client_messages.post()
+
+                if (client_is_connected) {
+
                 }
+
+                // update view
+                client_messages.update_view()
             }
 
-            function _get_server_text() {
-                return `server message #${server_messages.length + 1}`
-            }
-
-            function _get_client_text() {
-                return `client message #${client_messages.length + 1}`
-            }
-
-            function _update_client_messages() {
-                document.querySelector("#client .messages").replaceChildren(...client_messages.map((message) => {
-                    const element = document.createElement("div")
-                    element.innerText = message.text
-                    return element
-                }))
-            }
-
-            function _update_server_messages() {
-                document.querySelector("#server .messages").replaceChildren(...server_messages.map((message) => {
-                    const element = document.createElement("div")
-                    element.innerText = message.text
-                    return element
-                }))
-            }
+            document.querySelector("#post_client").onclick = post_client
+            document.querySelector("#post_server").onclick = post_server
+            document.querySelector("#toggle_lock").onclick = toggle_lock
+            document.querySelector("#toggle_connection").onclick = toggle_connection
+            document.querySelector("#ping").onclick = ping
         </script>
         <div id="server" class="root">
             <div class="header">
                 <p>SERVER</p>
 
-                <button onclick="toggle_lock()">LOCK</button>
+                <button id="toggle_lock">LOCK</button>
             </div>
             <div class="messages">
             </div>
             <div class="footer">
                 <p>server message #1</p>
 
-                <button onclick="post_server()">POST</button>
+                <button id="post_server">POST</button>
             </div>
         </div>
         <div id="client" class="root">
             <div class="header">
                 <p>CLIENT</p>
 
-                <button onclick="ping()">PING</button>
-                <button onclick="toggle_connection()">CONNECT</button>
+                <button id="ping">PING</button>
+                <button id="toggle_connection">DISCONNECT</button>
             </div>
             <div class="messages">
             </div>
             <div class="footer">
                 <p>client message #1</p>
 
-                <button onclick="post_client()">POST</button>
+                <button id="post_client">POST</button>
             </div>
         </div>
     </body>
