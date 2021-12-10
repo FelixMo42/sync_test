@@ -23,13 +23,13 @@ export default function Client(name, server) {
         Div(["header"], () => [
             Text(() => name),
 
-            Button(() => is_locked() ? "UNLOCK" : "LOCK", () => dispatch(SetLock(!is_locked()))),
+            Button(() => is_locked() ? "UNLOCK" : "LOCK", () => dispatch(SetLock(!is_locked())), is_locked),
         ]),
         Div(["messages"], () => messages().map(message => Text(() => message.text))),
         Div(["footer"], () => [
             Text(get_message_text),
 
             Button(() => "POST", () => dispatch(PostMessage(get_message_text()))),
-        ])
+        ], is_locked)
     ])
 }

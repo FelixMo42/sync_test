@@ -4,11 +4,12 @@ export function get_time() {
 
 export const on_update = []
 
-export function Div(classes, children) {
+export function Div(classes, children, locked=()=>false) {
     return () => {
         const element = document.createElement("div")
 
         element.classList.add(...classes)
+        element.classList.toggle("locked", locked())
 
         element.replaceChildren(...children().map(child => child()))
 
@@ -16,7 +17,7 @@ export function Div(classes, children) {
     }
 }
 
-export function Button(text, onclick) {
+export function Button(text, onclick, locked=()=>false) {
     return () => {
         const element = document.createElement("button")
 
@@ -25,16 +26,18 @@ export function Button(text, onclick) {
             onclick()
             on_update.forEach(cb => cb())
         }
+        element.classList.toggle("locked", locked())
 
         return element
     }
 }
 
-export function Text(text) {
+export function Text(text, locked=()=>false) {
     return () => {
         const element = document.createElement("p")
 
         element.innerText = text()
+        element.classList.toggle("locked", locked())
 
         return element
     }

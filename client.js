@@ -44,14 +44,14 @@ export default function Client(name, server) {
             Text(() => name),
 
             Button(() => "PING", () => sync()),
-            Button(() => model.is_locked() ? "UNLOCK" : "LOCK", () => dispatch(SetLock(!model.is_locked()))),
-            Button(() => is_connected ? "DISCONNECT" : "CONNECT", () => { is_connected = !is_connected }),
+            Button(() => model.is_locked() ? "UNLOCK" : "LOCK", () => dispatch(SetLock(!model.is_locked())), model.is_locked),
+            Button(() => is_connected ? "DISCONNECT" : "CONNECT", () => { is_connected = !is_connected }, () => !is_connected),
         ]),
         Div(["messages"], () => model.messages().map(message => Text(() => message.text))),
         Div(["footer"], () => [
             Text(get_message_text),
 
             Button(() => "POST", () => dispatch(PostMessage(get_message_text()))),
-        ])
+        ], model.is_locked)
     ])
 }
