@@ -30,7 +30,7 @@ export default function Client(name, server) {
         unsynced_actions = []
 
         // Replace the document
-        if (needs_to_update) model.replace(server.data())
+        if (needs_to_update) model.replace(server.get_data())
 
         model.updated()
     }

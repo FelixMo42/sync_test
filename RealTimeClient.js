@@ -8,11 +8,11 @@ export default function Client(name, server) {
     }
 
     function is_locked() {
-        return server.get_data().data.locked
+        return server.get_data().locked
     }
 
     function messages() {
-        return server.get_data().data.messages
+        return server.get_data().messages
     }
 
     function get_message_text() {

@@ -7,24 +7,18 @@ export default function Server() {
     // return possible api request
     return {
         last_updated() {
-            return {
-                last_updated: model.last_updated()
-            }
+            return model.last_updated()
         },
 
         get_data() {
-            return {
-                data: model.data()
-            }
+            return model.data()
         },
 
         sync_action(action) {
             const success = model.handle_action(action)
             model.updated()
 
-            return {
-                success
-            }
+            return success
         }
     }
 }
